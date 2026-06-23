@@ -1,0 +1,44 @@
+{
+    "Logistic Regression": {
+        "Accuracy": 0.81,
+        "Precision": 0.66,
+        "Recall": 0.57,
+        "F1-Score": 0.61,
+        "ROC-AUC": 0.84
+    },
+    "Decision Tree": {
+        "Accuracy": 0.79,
+        "Precision": 0.63,
+        "Recall": 0.55,
+        "F1-Score": 0.58,
+        "ROC-AUC": 0.83
+    },
+    "Random Forest": {
+        "Accuracy": 0.81,
+        "Precision": 0.67,
+        "Recall": 0.53,
+        "F1-Score": 0.59,
+        "ROC-AUC": 0.84
+    },
+    "K-Nearest Neighbors": {
+        "Accuracy": 0.75,
+        "Precision": 0.52,
+        "Recall": 0.5,
+        "F1-Score": 0.51,
+        "ROC-AUC": 0.77
+    },
+    "Support Vector Machine": {
+        "Accuracy": 0.79,
+        "Precision": 0.64,
+        "Recall": 0.49,
+        "F1-Score": 0.56,
+        "ROC-AUC": 0.8
+    },
+    "XGBoost": {
+        "Accuracy": 0.79,
+        "Precision": 0.61,
+        "Recall": 0.54,
+        "F1-Score": 0.57,
+        "ROC-AUC": 0.82
+    }
+}
