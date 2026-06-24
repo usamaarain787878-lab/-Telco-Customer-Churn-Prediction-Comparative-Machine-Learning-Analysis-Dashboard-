@@ -6,9 +6,17 @@ import plotly.graph_objects as go
 import joblib
 import os
 import re
+import subprocess  # Added for auto-training fallback
 
 # App utils and backend interfaces
 from utils import render_model_training_section, render_model_comparison_section
+
+# --- DYNAMIC PATH CONFIGURATION (Fixes Cloud File Path Issues) ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODELS_DIR = os.path.join(BASE_DIR, 'models')
+
+# Ensure models directory exists
+os.makedirs(MODELS_DIR, exist_ok=True)
 
 # Dark and professional styling configuration
 st.set_page_config(page_title="Telco Churn Analytics Ecosystem", layout="wide")
@@ -22,14 +30,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+# --- AUTOMATIC TRAINING FALLBACK TRIGGER ---
+# Agar core files missing hain to cloud par khud hi training run ho jaye
+metrics_csv_path = os.path.join(MODELS_DIR, 'model_comparison_metrics.csv')
+if not os.path.exists(metrics_csv_path):
+    training_script = os.path.join(BASE_DIR, 'train_models.py')
+    if os.path.exists(training_script):
+        try:
+            # Silent background trigger so the app doesn't break on first load
+            subprocess.run(['python', training_script], check=True)
+        except Exception as e:
+            pass
+
+
 # Helper function to safely load resources with dual-path fallback
 @st.cache_resource
 def load_resources():
-    # Aligned paths strictly with train_models.py outputs
-    primary_model_path = 'models/xgboost_model.pkl'
-    fallback_model_path = 'models/logistic_regression_model.pkl'
-    scaler_path = 'models/scaler.pkl'            
-    feature_names_path = 'models/feature_names.pkl' 
+    primary_model_path = os.path.join(MODELS_DIR, 'xgboost_model.pkl')
+    fallback_model_path = os.path.join(MODELS_DIR, 'logistic_regression_model.pkl')
+    scaler_path = os.path.join(MODELS_DIR, 'scaler.pkl')            
+    feature_names_path = os.path.join(MODELS_DIR, 'feature_names.pkl') 
     
     model = None
     scaler = None
@@ -64,9 +84,9 @@ model, scaler, feature_names_data = load_resources()
 @st.cache_data
 def load_and_clean_data():
     paths_to_check = [
-        'data/Telco-Customer-Churn.csv', 
-        'Telco-Customer-Churn.csv', 
-        'data/WA_Fn-UseC_-Telco-Customer-Churn.csv'
+        os.path.join(BASE_DIR, 'data', 'Telco-Customer-Churn.csv'), 
+        os.path.join(BASE_DIR, 'Telco-Customer-Churn.csv'), 
+        os.path.join(BASE_DIR, 'data', 'WA_Fn-UseC_-Telco-Customer-Churn.csv')
     ]
     
     path_found = None
@@ -76,8 +96,8 @@ def load_and_clean_data():
             break
             
     if not path_found:
-        if os.path.exists('.'):
-            csv_files = [f for f in os.listdir('.') if f.endswith('.csv') and 'churn' in f.lower()]
+        if os.path.exists(BASE_DIR):
+            csv_files = [os.path.join(BASE_DIR, f) for f in os.listdir(BASE_DIR) if f.endswith('.csv') and 'churn' in f.lower()]
             if csv_files:
                 path_found = csv_files[0]
 
@@ -168,13 +188,16 @@ elif app_mode == "4. Model Training Panel":
 
 # ----------------- SECTION 5: LEADERBOARD -----------------
 elif app_mode == "5. Model Comparison Leaderboard":
-    render_model_comparison_section()
+    if os.path.exists(metrics_csv_path):
+        render_model_comparison_section()
+    else:
+        st.warning("⚠️ Leaderboard metrics file missing.")
+        st.info("💡 Solution: Please head over to '4. Model Training Panel' and train your models first to generate comparison charts.")
 
 # ----------------- SECTION 6: LIVE CLIENT PREDICTION FORM -----------------
 elif app_mode == "6. Live Client Prediction Form":
     st.title("🔮 Predictive Inference Control Center")
     
-    # Reload components inline to avoid stale state issues after training models
     live_model, live_scaler, live_features = load_resources()
     
     if live_model is not None and live_scaler is not None and live_features is not None:
@@ -216,26 +239,18 @@ elif app_mode == "6. Live Client Prediction Form":
         st.markdown("---")
         if st.button("🚀 Trigger Real-Time Machine Learning Diagnostic Assessment Inference"):
             try:
-                # Convert categorical values to matching structure using One-Hot Encoding
                 input_encoded = pd.get_dummies(raw_input)
-                
-                # Create empty template with all expected features initialized to 0
                 full_input_df = pd.DataFrame(0, index=[0], columns=live_features)
                 
-                # Merge encoded inputs into our expected columns template
                 for col in input_encoded.columns:
                     if col in full_input_df.columns:
                         full_input_df[col] = input_encoded[col].values
                 
-                # XGBoost column characters clearance
                 regex = re.compile(r"\[|\]|<", re.IGNORECASE)
                 full_input_df.columns = [regex.sub("_", col) if any(x in str(col) for x in set(('[', ']', '<'))) else col for col in full_input_df.columns]
                 full_input_df = full_input_df.astype(float)
 
-                # Transform using the loaded pipeline preprocessor
                 scaled_input = live_scaler.transform(full_input_df)
-                
-                # Make prediction mapping
                 prediction = live_model.predict(scaled_input)[0]
                 
                 if hasattr(live_model, "predict_proba"):
