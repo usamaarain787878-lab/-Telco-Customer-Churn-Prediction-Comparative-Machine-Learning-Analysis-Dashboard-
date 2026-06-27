@@ -1,7 +1,6 @@
 # 📊 Telco Customer Churn Prediction & Comparative ML Analysis Dashboard
 
-### 🌐 Live Application URL: [https://share.streamlit.io/your-username/telco-churn-project2](https://share.streamlit.io/your-username/telco-churn-project2)
-
+###https://usama-data-scientist.streamlit.app/
 ## 🎯 Business Problem & Context 
 Acquiring new clients carries a significantly higher financial premium than retaining an active customer base. When customers depart, businesses suffer immediate operational losses and recurring monthly contract revenue slips. By proactively mapping high-risk customer profiles early, marketing teams and customer success managers can introduce precision retention interventions to stabilize revenue retention.
 
